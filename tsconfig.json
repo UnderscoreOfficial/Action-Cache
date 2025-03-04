@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "lib": [
+      "ESNext",
+      "DOM",
+      "dom.iterable"
+    ],
+    "strict": true,
+    //"allowUnusedLabels": false,
+    //"allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    //"noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    //"noUnusedLocals": true,
+    //"noUnusedParameters": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "moduleResolution": "bundler", // bundler or node?
+    "resolveJsonModule": true,
+    "jsx": "preserve", // disabled ts handleing of jsx lets downstream tools handle it
+    "noEmit": true, // disables .js / .d.ts files lets webpack or next.js generate files
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "allowJs": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
