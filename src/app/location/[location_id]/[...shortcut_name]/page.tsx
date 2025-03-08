@@ -4,7 +4,7 @@ import { getShortcuts, updateShortcut } from "@/actions/database"
 import KeyboardLayout from "@/components/KeyboardLayout"
 import { Divider, Flex, Group, Skeleton, Tooltip } from "@mantine/core"
 import { ShortcutManagerShortcuts } from "@prisma/client"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import styles from "@/modules/KeyboardLayout.module.css";
 import { z } from "zod"
@@ -18,28 +18,53 @@ type params = {
 }
 
 export default function ShortcutLocation({ params }: params) {
+  // data
   const [url_shortcut_name, setUrlShortcutName] = useState("");
-  const [shortcuts, setShortcuts] = useState<ShortcutManagerShortcuts[]>();
   const [shortcut, setShortcut] = useState<ShortcutManagerShortcuts>();
-  const [shifting, setShifting] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [location, setLocation] = useState<z.infer<typeof location_schema>[]>();
 
+  // keys
+  const [shifting, setShifting] = useState(false);
+  const [ctrling, setCtrling] = useState(false);
+
+  // misc
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  // fetch & set initial values
   async function setValues() {
     const shortcuts = await getShortcuts();
     const { location_id, shortcut_name } = await params
     setUrlShortcutName(decodeURI(String(shortcut_name[0])));
-    setShortcuts(shortcuts.data);
-    setShortcut(shortcuts.data.filter(s => s.id == Number(location_id))[0]);
+
+    const local_shortcut = shortcuts.data.filter(s => s.id == Number(location_id))[0];
+    setShortcut(local_shortcut);
+
+    if (local_shortcut) {
+      const local_location = JSON.parse(local_shortcut.location) as z.infer<typeof location_schema>[];
+      setLocation(local_location);
+    }
   }
+
   useEffect(() => {
-    setValues()
+    setValues();
+    // adding setValues as a dep creates an infinite loop...
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // shift & ctrl eventlisteners
+  useEffect(() => {
     function keyDown(event: KeyboardEvent) {
       if (event.shiftKey) {
         setShifting(true);
       }
+      if (event.ctrlKey) {
+        setCtrling(true);
+      }
     };
     function keyUp() {
       setShifting(false);
+      setCtrling(false);
     };
 
     document.addEventListener("keyup", keyUp);
@@ -48,29 +73,34 @@ export default function ShortcutLocation({ params }: params) {
       document.removeEventListener("keyup", keyUp)
       document.removeEventListener("keydown", keyDown);
     };
+    // depends on nothing & only need eventlisteners to be set once
   }, [])
 
+  // verifys url shortcut name string is correct
   useEffect(() => {
     async function verifyUrl() {
       if (url_shortcut_name != "" && shortcut != undefined) {
         if (url_shortcut_name != shortcut?.shortcut) {
-          redirect(`/location/${shortcut.id}/${encodeURI(shortcut.shortcut)}`);
+          router.replace(`/location/${shortcut.id}/${encodeURI(shortcut.shortcut)}`);
         } else {
         };
       }
     }
     verifyUrl();
-  }, [shortcuts]);
+  }, [router, url_shortcut_name, shortcut]);
 
 
+  // sets active keys from db
   useEffect(() => {
     async function setActive() {
-      if (shortcut) {
-        const location = await JSON.parse(shortcut.location) as z.infer<typeof location_schema>[];
+      if (shortcut && location) {
         if (location) {
           for (const l of location) {
             const li = document.querySelector(`#${l.location}`);
-            li?.classList.add(styles[`key-active-${l.order}`] || "");
+            const active_class = styles[`key-active-${l.order}`];
+            if (active_class) {
+              li?.classList.add(active_class);
+            }
           }
         }
       }
@@ -79,39 +109,79 @@ export default function ShortcutLocation({ params }: params) {
       }, 300);
     }
     setActive();
-  }, [shortcut]);
+  }, [shortcut, location]);
 
+  // key press logic
   async function handleClick(event: React.MouseEvent) {
     const target = event.target as HTMLElement;
     const key = target.lastChild?.parentElement?.parentElement as HTMLElement;
     if (key.id && shortcut && location) {
-      const location = await JSON.parse(shortcut.location) as z.infer<typeof location_schema>[];
+      // id removed, not used
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id, ...shortcut_params } = shortcut;
 
-      //if (active_classes.some(active => key.classList.contains(String(active)))) { // idk cool method .some()
+      let updated_location = location;
+
+      // get specific id for current key from its class.
       const get_class = Array.from(key.classList).find(cls => cls.startsWith("KeyboardLayout_key-active-"));
       const active_class = get_class?.split("__")[0]?.replace("KeyboardLayout_key-active-", "");
-      if (active_class) {
-        key.classList.remove(styles[`key-active-${active_class}`] || "")
-        const updated_location = [...location.filter((l) => l.location !== key.id)];
-        const { id, ...shortcut_params } = shortcut;
-        await updateShortcut({ ...shortcut_params, location: JSON.stringify(updated_location) }, shortcut?.id, "/");
-      } else {
-        const set_key_count = location.filter((value, index, self) => (
+
+      // active state class and timming
+      const button_active = styles[`button-active`] || "";
+      const button_active_timeout = 200; // ms
+
+      if (active_class) { // remove key
+        // set active state only for valid keys
+        key.classList.add(button_active);
+        setTimeout(() => key.classList.remove(button_active), button_active_timeout);
+
+        key.classList.remove(styles[`key-active-${active_class}`] || "");
+        updated_location = [...location.filter((l) => l.location !== key.id)];
+
+      } else { // add key
+        // remove shifted values to get unique count for which color is next.
+        const unique_location = location.filter((value, index, self) => (
           self.findIndex((t) => t.order == value.order) == index
         ));
-        let active_id = set_key_count.length + 1;
+
+        let active_color = unique_location.length + 1;
         if (shifting) {
-          active_id = set_key_count.length;
+          active_color = unique_location.length;
+        } else {
+          // preventing selecting the same color when removing a previous color & not shifting
+          const contains_same_color = location.some(l => l.order == active_color)
+          if (contains_same_color) {
+            return;
+          }
         }
-        try {
-          key.classList.add(styles[`key-active-${active_id}`] || "");
-          const updated_location = [...location, { location: key.id, order: Number(active_id) }];
-          const { id, ...shortcut_params } = shortcut;
-          await updateShortcut({ ...shortcut_params, location: JSON.stringify(updated_location) }, shortcut?.id, "/");
-        } catch (e) {
-        };
+        // preventing colors past 5 since only 1-5 exist
+        if (active_color > 5) return;
+
+        // set active state only for valid keys
+        key.classList.add(button_active);
+        setTimeout(() => key.classList.remove(button_active), button_active_timeout);
+
+        const new_active_class = styles[`key-active-${active_color}`];
+        if (new_active_class) {
+          key.classList.add(new_active_class);
+        }
+
+        // remove any wrong ordered keys only 1-5 allowed & add selected key
+        updated_location = [...location.filter((l) => l.order <= 5), { location: key.id, order: Number(active_color) }];
+
+        if (shifting && ctrling) {
+          // reset location data if ctrl & shift pressed while clicking key
+          updated_location = [];
+        }
       }
-      setValues();
+      if (location != updated_location) {
+        // save local & db location data
+        setLocation(updated_location);
+        await updateShortcut({ ...shortcut_params, location: JSON.stringify(updated_location) }, shortcut?.id, "/");
+        if (shifting && ctrling) {
+          window.location.reload();
+        }
+      }
     }
   };
 

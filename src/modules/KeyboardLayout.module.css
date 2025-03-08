@@ -1,70 +1,88 @@
 .key-li {
   box-shadow: inset 0 -10px 0 rgba(140, 140, 140, 1),
-  inset -10px 0px 0 rgba(140, 140, 140, 1), 
-  inset 10px 0px 0 rgba(140, 140, 140, 1), 
-  0px 0px 25px rgba(140, 140, 140, 0.75);
+    inset -10px 0px 0 rgba(140, 140, 140, 1),
+    inset 10px 0px 0 rgba(140, 140, 140, 1),
+    0px 0px 25px rgba(140, 140, 140, 0.75);
+  @apply rounded-md border-2 flex justify-center transition-transform duration-75;
+}
+
+.key-li button {
+  @apply flex items-center justify-center rounded-md bg-background;
+  transition: font-size 75ms ease-out;
+}
+
+.button-active button {
+  font-size: 0px;
+}
+
+.key-li:hover button {
+  height: 100%;
+  width: 100%;
 }
 
 .key-li:hover {
-  scale: 90%;
-  box-shadow: 0px 0px 25px rgba(140, 140, 140, 0.75);
+  @apply border-t-[1px];
+  transform: scale(88%);
 }
-.key-li:hover button {
-  width: 100%;
-  height: 100%;
-}
+
+/* colors */
 
 .key-active-1 {
   box-shadow: inset 0 -10px 0 #3e1a6a,
-  inset -10px 0px 0 #3e1a6a, 
-  inset 10px 0px 0 #3e1a6a, 
-  0px 0px 25px rgba(82, 35, 141, 0.75);
+    inset -10px 0px 0 #3e1a6a,
+    inset 10px 0px 0 #3e1a6a,
+    0px 0px 25px rgba(82, 35, 141, 0.75);
   border-color: #52238d;
 }
+
 .key-active-1:hover {
   box-shadow: 0px 0px 25px rgba(82, 35, 141, 0.65);
 }
 
 .key-active-2 {
   box-shadow: inset 0 -10px 0 #1b9346,
-  inset -10px 0px 0 #1b9346, 
-  inset 10px 0px 0 #1b9346, 
-  0px 0px 25px rgba(27, 147, 70, 0.75);
+    inset -10px 0px 0 #1b9346,
+    inset 10px 0px 0 #1b9346,
+    0px 0px 25px rgba(27, 147, 70, 0.75);
   border-color: #4ADE80;
 }
+
 .key-active-2:hover {
   box-shadow: 0px 0px 25px rgba(27, 147, 70, 0.65);
 }
 
 .key-active-3 {
   box-shadow: inset 0 -10px 0 #0a5ce0,
-  inset -10px 0px 0 #0a5ce0, 
-  inset 10px 0px 0 #0a5ce0, 
-  0px 0px 25px rgba(10, 92, 224, 0.75);
+    inset -10px 0px 0 #0a5ce0,
+    inset 10px 0px 0 #0a5ce0,
+    0px 0px 25px rgba(10, 92, 224, 0.75);
   border-color: #3B82F6;
 }
+
 .key-active-3:hover {
   box-shadow: 0px 0px 25px rgba(10, 92, 224, 0.65);
 }
 
 .key-active-4 {
   box-shadow: inset 0 -10px 0 #a88006,
-  inset -10px 0px 0 #a88006, 
-  inset 10px 0px 0 #a88006, 
-  0px 0px 25px rgba(168, 128, 6, 0.75);
+    inset -10px 0px 0 #a88006,
+    inset 10px 0px 0 #a88006,
+    0px 0px 25px rgba(168, 128, 6, 0.75);
   border-color: #EAB308;
 }
+
 .key-active-4:hover {
   box-shadow: 0px 0px 25px rgba(168, 128, 6, 0.65);
 }
 
 .key-active-5 {
   box-shadow: inset 0 -10px 0 #c2146a,
-  inset -10px 0px 0 #c2146a, 
-  inset 10px 0px 0 #c2146a, 
-  0px 0px 25px rgba(194, 20, 106, 0.75);
+    inset -10px 0px 0 #c2146a,
+    inset 10px 0px 0 #c2146a,
+    0px 0px 25px rgba(194, 20, 106, 0.75);
   border-color: #EC4899;
 }
+
 .key-active-5:hover {
   box-shadow: 0px 0px 25px rgba(194, 20, 106, 0.65);
 }
