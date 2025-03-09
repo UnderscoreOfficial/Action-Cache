@@ -9,6 +9,7 @@ import { useEffect, useState } from "react"
 import styles from "@/modules/KeyboardLayout.module.css";
 import { z } from "zod"
 import { location_schema } from "@/util/schemas"
+import { useMediaQuery } from "@mantine/hooks"
 
 type params = {
   params: Promise<{
@@ -29,6 +30,7 @@ export default function ShortcutLocation({ params }: params) {
 
   // misc
   const [loading, setLoading] = useState(true);
+  const media_query = useMediaQuery("(max-width: 1200px)");
   const router = useRouter();
 
   // fetch & set initial values
@@ -51,6 +53,15 @@ export default function ShortcutLocation({ params }: params) {
     // adding setValues as a dep creates an infinite loop...
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // disable scroll to prevent seeing under overlay
+  useEffect(() => {
+    if (media_query) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [media_query])
 
   // shift & ctrl eventlisteners
   useEffect(() => {
@@ -186,56 +197,81 @@ export default function ShortcutLocation({ params }: params) {
   };
 
   return (
-    <Flex className="flex-col items-center mt-24">
-      {loading ?
-        <Group className={`mb-4 font-bold justify-between min-w-0 w-3/5 z-30 absolute`}>
-          <Skeleton height={35} width={100} />
-          <Skeleton height={35} width={400} />
-        </Group> : ""
+    <>
+      {media_query ?
+        <Flex className="flex-col items-center absolute w-full h-lvh z-50 bg-background">
+          <Flex className="flex-col gap-4 justify-center mt-16 border-4 p-10 ml-4 mr-4 rounded-md border-neutral-500 bg-neutral-900" >
+            <p className="font-bold text-2xl text-center underline underline-offset-4 text-neutral-200">
+              Devices smaller than
+              <span className="text-red-500 text-3xl"> 1200px </span>
+              width not recommended!
+            </p>
+            <p className="font-bold text-xl text-right text-neutral-400">
+              Switch to a
+              <span className="text-2xl text-orange-400"> bigger </span>
+              device or (
+              <span className="text-2xl text-purple-400">rotate</span>
+              ) your device.
+            </p>
+          </Flex>
+        </Flex>
+        : <></>
       }
-      <Group className={`mb-4 font-bold justify-between min-w-0 w-3/5`}>
-        <Tooltip label="Shortcut Name">
-          <p className="transition-none border-2 border-neutral-700 h-[35px] p-1 rounded-md text-neutral-100">{shortcut?.shortcut}</p>
-        </Tooltip>
-        <Tooltip label="Shortcut Description">
-          <p className="border-2 border-neutral-700 p-1 h-[35px] rounded-md text-neutral-100">{shortcut?.description}</p>
-        </Tooltip>
-      </Group>
-      <Divider className="w-3/5 mb-4" />
-      <Group className="w-3/5 min-w-0 justify-between">
-        <Tooltip label="Hold shift while clicking key for optional keys.">
+      <Flex className="flex-col items-center mt-24">
+        {loading ?
+          <Group className={`min-w-0 w-3/5 z-30 absolute`}>
+            <div className={`flex w-full gap-6`}>
+              <Skeleton height={35} className="w-1/2" />
+              <Skeleton height={35} className="w-1/2" />
+            </div>
+          </Group> : ""
+        }
+        <Group className={`mb-4 font-bold justify-between min-w-0 w-3/5`}>
+          <div className="flex w-full gap-4 justify-between overflow-hidden text-neutral-100 text-nowrap text-center">
+            <Tooltip label="Shortcut Name">
+              <p className="border-2 border-neutral-700 p-1 h-[35px] rounded-md w-full min-w-10 max-w-fit">{shortcut?.shortcut}</p>
+            </Tooltip>
+            <Tooltip label="Shortcut Description">
+              <p className="border-2 border-neutral-700 p-1 h-[35px] rounded-md w-full min-w-10 max-w-fit">{shortcut?.description}</p>
+            </Tooltip>
+          </div>
+        </Group>
+        <Divider className="w-3/5 mb-4" />
+        <Group className="w-3/5 min-w-0 justify-between">
+          <Tooltip label="Hold shift while clicking key for optional keys.">
+            <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+              Same
+              <span className="text-purple-500 font-bold"> C</span>
+              <span className="text-green-400 font-bold">o</span>
+              <span className="text-blue-500 font-bold">l</span>
+              <span className="text-yellow-500 font-bold">o</span>
+              <span className="text-pink-500 font-bold">r </span>
+              = Either
+            </p>
+          </Tooltip>
           <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-            Same
-            <span className="text-purple-500 font-bold"> C</span>
-            <span className="text-green-400 font-bold">o</span>
-            <span className="text-blue-500 font-bold">l</span>
-            <span className="text-yellow-500 font-bold">o</span>
-            <span className="text-pink-500 font-bold">r </span>
-            = Either
+            <span className="text-white">White</span> = Unassigned
           </p>
-        </Tooltip>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-white">White</span> = Unassigned
-        </p>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-purple-500">Purple</span> = 1st Key
-        </p>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-green-400">Green</span> = 2nd Key
-        </p>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-blue-500">Blue</span> = 3rd Key
-        </p>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-yellow-500">Yellow</span> = 4th Key
-        </p>
-        <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
-          <span className="text-pink-500">Pink</span> = 5th Key
-        </p>
-      </Group>
-      <Flex onClick={handleClick} className="mt-32">
-        <KeyboardLayout />
+          <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+            <span className="text-purple-500">Purple</span> = 1st Key
+          </p>
+          <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+            <span className="text-green-400">Green</span> = 2nd Key
+          </p>
+          <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+            <span className="text-blue-500">Blue</span> = 3rd Key
+          </p>
+          <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+            <span className="text-yellow-500">Yellow</span> = 4th Key
+          </p>
+          <p className="border-2 border-neutral-700 p-1 rounded-md text-neutral-300">
+            <span className="text-pink-500">Pink</span> = 5th Key
+          </p>
+        </Group>
+        <Flex onClick={handleClick} className="mt-32 mb-32">
+          <KeyboardLayout />
+        </Flex>
       </Flex>
-    </Flex>
+    </>
   )
 }
