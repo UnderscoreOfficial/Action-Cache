@@ -1,16 +1,17 @@
-import { getCategories, getShortcuts } from "@/actions/database";
-import Main from "@/components/Main";
-import { Flex } from "@mantine/core";
-import { Suspense } from "react";
+import ActionList from "@/components/ActionList";
+import Toolbar from "@/components/Toolbar";
+import { Divider, Flex } from "@mantine/core";
 
 export default async function Home() {
-  const categories = await getCategories();
-  const shortcuts = await getShortcuts();
 
   return (
-    <Flex className="mr-10 ml-10 mt-6 mb-6">
+    <Flex className="mb-6 ml-10 mr-10 mt-6">
       <main className="w-full">
-        <Main categories={categories.data} shortcuts={shortcuts.data}/>
+        <Flex className="flex-col gap-6 w-full">
+          <Toolbar />
+          <Divider />
+          <ActionList />
+        </Flex>
       </main>
     </Flex>
   );

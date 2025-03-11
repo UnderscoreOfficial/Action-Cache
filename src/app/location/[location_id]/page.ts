@@ -1,4 +1,4 @@
-import { getShortcut } from "@/actions/database";
+import { getAction } from "@/actions/database";
 import { redirect } from "next/navigation";
 
 type params = {
@@ -9,8 +9,8 @@ type params = {
 
 export default async function LocationID({ params }: params) {
   const { location_id } = await params
-  const shortcut = await getShortcut(parseInt(location_id));
-  if (shortcut.status && shortcut.data) {
-    redirect(`/location/${location_id}/${encodeURI(shortcut.data.shortcut)}`);
+  const action = await getAction(parseInt(location_id));
+  if (action.status && action.data) {
+    redirect(`/location/${location_id}/${encodeURI(action.data.name)}`);
   };
 } 

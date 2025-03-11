@@ -5,19 +5,20 @@ import { useForm } from "@mantine/form"
 import Form from "next/form"
 import { Button, TextInput } from '@mantine/core';
 import { category_schema, status_schema } from '@/util/schemas';
-import { createCategory, updateCategory } from '@/actions/database';
+import { createCategory, getCategories, getCategory, updateCategory } from '@/actions/database';
 import { z } from 'zod';
 import { useEffect } from 'react';
-import { ShortcutManagerCategories } from '@prisma/client';
+import { useCategoriesStore } from '@/stores/categories_store';
 
 type props = {
   close(): void
-  categories?: ShortcutManagerCategories[],
-  category_id?: number
+  id?: number
   setValue?(value: string): void
 };
 
-export default function CategoryForm({ close, category_id, categories, setValue }: props) {
+export default function CategoryForm({ close, id, setValue }: props) {
+  const setCategories = useCategoriesStore((state) => state.set);
+
   const form = useForm({
     mode: "uncontrolled",
     initialValues: {
@@ -31,25 +32,25 @@ export default function CategoryForm({ close, category_id, categories, setValue 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function getValue() {
-    if (category_id && categories) {
-      const cat = categories.filter(c => c.id == category_id);
-      if (cat.length == 1) {
-        const name = cat[0]?.name || "";
-        form.setValues({ name: name })
+  async function getValue() {
+    if (id) {
+      const category = await getCategory(id)
+      if (category.status.success && category.data) {
+        form.setValues({ name: category.data.name })
       }
     }
-
   }
 
   async function submitForm(values: typeof form.values) {
     getValue();
     let status: z.infer<typeof status_schema>;
-    if (category_id) {
-      const category = await updateCategory(values, category_id, "/")
+    if (id) {
+      const category = await updateCategory(values, id)
+      setCategories(await getCategories());
       status = { status: { ...category.status } };
     } else {
-      const category = await createCategory(values, "/");
+      const category = await createCategory(values);
+      setCategories(await getCategories());
       const id = category.data?.id;
       if (id && setValue) {
         setValue(String(id));
