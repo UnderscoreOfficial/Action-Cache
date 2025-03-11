@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ColorSchemeScript, createTheme, mantineHtmlProps, MantineProvider } from "@mantine/core";
 import "./globals.css";
 import '@mantine/core/styles.css';
 import { ModalsProvider } from "@mantine/modals";
-import { Suspense } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
+  weight: "400",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Shortcut Manager",
-  description: "Manage keyboard shortcuts for various applications.",
+  title: "Action Cache",
+  description: "Manage keyboard shortcuts & cli commands for various applications.",
 };
 
 const theme = createTheme({
@@ -48,10 +43,10 @@ export default function RootLayout({
   return (
     <html lang="en" {...mantineHtmlProps}>
       <head>
-       <ColorSchemeScript defaultColorScheme="dark"/> 
+        <ColorSchemeScript forceColorScheme="dark" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <MantineProvider theme={theme} defaultColorScheme="dark">
+      <body className={`${inter.className} antialiased`}>
+        <MantineProvider theme={theme} forceColorScheme="dark">
           <ModalsProvider>{children}</ModalsProvider>
         </MantineProvider>
       </body>
