@@ -1,87 +1,82 @@
 "use server"
 
-import {prisma} from "@/lib/prisma" 
-import { revalidatePath } from "next/cache"
+import { prisma } from "@/util/prisma";
 import { z } from "zod";
-import { 
-  shortcut_schema, 
+import {
   category_schema,
   status_schema,
+  action_schema,
 } from "@/util/schemas";
+import { Categories, Actions } from "@prisma/client";
+import { createStatus } from "@/util/util";
 
-//type path_type = z.infer<typeof path_schema>["path"]
+export type ActionsReturn = {
+  data: Actions[],
+} & z.infer<typeof status_schema>;
 
-// internal helper functions
-function createStatus(success: boolean, message: string): z.infer<typeof status_schema> {
-    return {
-      status: {
-        success: success,
-        message: message,
-      },
-    };
-}
+export type CategoriesReturn = {
+  data: Categories[],
+} & z.infer<typeof status_schema>;
 
 // creating
-
-export async function createCategory(params: z.infer<typeof category_schema>, path: string) {
+export async function createCategory(params: z.infer<typeof category_schema>) {
   try {
-    const category = await prisma.shortcutManagerCategories.create({
+    const category = await prisma.categories.create({
       data: {
         name: params.name,
       },
     });
-    revalidatePath(path);
     return {
       ...createStatus(true, "Category Created."),
-      data: category 
+      data: category
     };
   } catch (error: unknown) {
-    return {...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined};
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined };
   }
 }
 
-export async function createShortcut(params: z.infer<typeof shortcut_schema>, path: string) {
+export async function createAction(params: z.infer<typeof action_schema>) {
   try {
-    await prisma.shortcutManagerShortcuts.create({
+    const action = await prisma.actions.create({
       data: {
-        shortcut: params.shortcut,
+        type: params.type,
+        name: params.name,
         location: params.location,
         description: params.description,
         category_id: params.category_id,
       },
     });
-    revalidatePath(path);
-    return createStatus(true, "Shortcut Created.");
+    return {
+      ...createStatus(true, "Action Created."),
+      data: action
+    }
   } catch (error: unknown) {
-    return createStatus(false, (error instanceof Error) ? error.message : "");
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined };
   }
 }
 
 // deleting
-
-export async function deleteShortcut(id: number, path: string) {
+export async function deleteAction(action_id: number) {
   try {
-    await prisma.shortcutManagerShortcuts.delete({
+    await prisma.actions.delete({
       where: {
-        id: id
+        id: action_id
       },
     });
-    revalidatePath(path);
-    return createStatus(true, "Shortcut Deleted.");
+    return createStatus(true, "Action Deleted.");
   } catch (error: unknown) {
     return createStatus(false, (error instanceof Error) ? error.message : "");
   }
 }
 
 // user must delete (all of many) in the one to many relation before category can be deleted
-export async function deleteCategory(id: number, path: string) {
+export async function deleteCategory(category_id: number) {
   try {
-    await prisma.shortcutManagerCategories.delete({
+    await prisma.categories.delete({
       where: {
-        id: id
+        id: category_id
       },
     });
-    revalidatePath(path);
     return createStatus(true, "Category Deleted.");
   } catch (error: unknown) {
     return createStatus(false, (error instanceof Error) ? error.message : "");
@@ -89,30 +84,29 @@ export async function deleteCategory(id: number, path: string) {
 }
 
 // updating
-
-export async function updateShortcut(params: z.infer<typeof shortcut_schema>, shortcut_id: number, path: string) {
+export async function updateAction(params: z.infer<typeof action_schema>, action_id: number) {
   try {
-    await prisma.shortcutManagerShortcuts.update({
+    await prisma.actions.update({
       where: {
-        id: shortcut_id
+        id: action_id
       },
       data: {
-        shortcut: params.shortcut,
-        location: params.location,
+        type: params.type,
+        name: params.name,
         description: params.description,
         category_id: params.category_id,
+        location: params.location,
       },
     });
-    revalidatePath(path);
-    return createStatus(true, "Shortcut Updated.");
+    return createStatus(true, "Action Updated.");
   } catch (error: unknown) {
     return createStatus(false, (error instanceof Error) ? error.message : "");
   }
 }
 
-export async function updateCategory(params: z.infer<typeof category_schema>, category_id: number, path: string) {
+export async function updateCategory(params: z.infer<typeof category_schema>, category_id: number) {
   try {
-    await prisma.shortcutManagerCategories.update({
+    await prisma.categories.update({
       where: {
         id: category_id
       },
@@ -120,45 +114,60 @@ export async function updateCategory(params: z.infer<typeof category_schema>, ca
         name: params.name,
       },
     });
-    revalidatePath(path);
     return createStatus(true, "Category Updated.");
   } catch (error: unknown) {
     return createStatus(false, (error instanceof Error) ? error.message : "");
   }
 }
 
-// retrieving data reting
-
+// fetching data
 export async function getCategories() {
   try {
-    const categories = await prisma.shortcutManagerCategories.findMany({});
-    return {...createStatus(true, "Retrieved Categories."), data: categories};
+    const categories = await prisma.categories.findMany({});
+    return { ...createStatus(true, "Retrieved Categories."), data: categories };
   } catch (error: unknown) {
-    return {...createStatus(false, (error instanceof Error) ? error.message : ""), data: []}
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: [] }
   }
 }
 
-export async function getShortcuts() {
+export async function getCategory(category_id: number) {
   try {
-    const shortcuts = await prisma.shortcutManagerShortcuts.findMany({});
-    return {...createStatus(true, "Retrieved Shortcuts."), data: shortcuts};
-  } catch (error: unknown) {
-    return {...createStatus(false, (error instanceof Error) ? error.message : ""), data: []};
-  }
-}
-
-export async function getShortcut(shortcut_id: number) {
-  try {
-    const shortcut = await prisma.shortcutManagerShortcuts.findUnique({
+    const category = await prisma.categories.findUnique({
       where: {
-        id: shortcut_id,
+        id: category_id,
       }
     });
-    return {
-      ...createStatus(true, "Retrieved Shortcut."),
-      data: shortcut 
-    };
+    return { ...createStatus(true, "Retrieved Category."), data: category };
   } catch (error: unknown) {
-    return {...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined};
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined }
+  }
+}
+
+export async function getActions(category_id: number) {
+  try {
+    const actions = await prisma.actions.findMany({
+      orderBy: {
+        id: "desc",
+      },
+      where: {
+        category_id: category_id,
+      }
+    });
+    return { ...createStatus(true, "Retrieved Actions."), data: actions };
+  } catch (error: unknown) {
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: [] };
+  }
+}
+
+export async function getAction(action_id: number) {
+  try {
+    const action = await prisma.actions.findUnique({
+      where: {
+        id: action_id,
+      }
+    });
+    return { ...createStatus(true, "Retrieved Action."), data: action };
+  } catch (error: unknown) {
+    return { ...createStatus(false, (error instanceof Error) ? error.message : ""), data: undefined };
   }
 }
