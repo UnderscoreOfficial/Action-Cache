@@ -6,6 +6,11 @@ learning and rememebering new shortcuts much more manageable.
 
 This was built with [Next.js](https://github.com/vercel/next.js/), [CSS Modules](https://github.com/css-modules/css-modules), [Tailwind](https://github.com/tailwindlabs/tailwindcss), [Mantine UI](https://github.com/mantinedev/mantine), [Typescript](https://github.com/microsoft/TypeScript), [Zod](https://github.com/colinhacks/zod), [Prisma](https://github.com/prisma/prisma), [Zustand](https://github.com/pmndrs/zustand)
 
+## Screenshots
+
+![Home](./assets/action-cache.png)
+![Location](./assets/action-cache-location.png)
+
 ## Docker
 - Build
     1. `git clone https://github.com/UnderscoreOfficial/Action-Cache.git`
